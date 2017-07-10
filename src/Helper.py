@@ -15,7 +15,6 @@ def list_difference(l1, l2):
 
     for i in range(0, len(l1)):
             exists = False
-            print(i)
             for row in l2:
                 row_equivalent = True
                 for col in range(0, len(row)):
@@ -27,3 +26,13 @@ def list_difference(l1, l2):
                 difference.append(l1[i])
 
     return difference
+
+def write_matrix(m, file_name):
+    file = open(file_name, 'w+')
+    for row in range(0, m.shape[0]):
+        for col in range(0, m.shape[1]):
+            file.write(str(m[row,col]))
+            if col < m.shape[1] - 1:
+                file.write(', ')
+            else:
+                file.write('\n')

@@ -1,11 +1,17 @@
 from numpy import genfromtxt
 import numpy as np
-from Helper import list_difference, print_matrix
+from Helper import list_difference, print_matrix, write_matrix
 import random as rnd
 import Helper
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report,confusion_matrix
-
+from sklearn import multioutput
+from sklearn.datasets import make_classification
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils import shuffle
+import os
+import sys
 
 
 class Main:
@@ -63,6 +69,15 @@ class Main:
                 sltd2=sltd2+1
         return X
 
+    def make_binary(self, m):
+        x = []
+        for row in range(0, m.shape[0]):
+            binary = 0
+            for col in range(0, m.shape[1]):
+                binary = binary + int(m[row, col]) * 10 ** (2-col)
+            x.append(binary)
+        return x
+
     def select_one(self, m, bnd):
         """""
             Selects from 0 - bnd and returns the result, exclusive
@@ -99,54 +114,56 @@ class Main:
         print("Modified Size: {0}".format(modified.shape[0]))
 
 
-        if self.get_bool("Use entire data set?"):
+        if self.get_bool("Create new data sets?"):
             bnd = int(input("Size of training set"))
             data_list = self.select_one(data, data.shape[0])
             rnd.shuffle(data_list)
 
-            print("1")
             train_set_array = self.select_one(data_list, bnd)
             train_set = np.matrix(np.array(train_set_array))
             train_features = train_set[:, 0:3]
             train_targets = train_set[:, 3:]
 
-            print("2")
-
             test_set = np.matrix(np.array(Helper.list_difference(data_list, train_set_array)))
-
-            print("3")
-
             test_features = test_set[:, 0:3]
             test_targets = test_set[:, 3:6]
 
-            print("Train Features")
-            print(train_features)
+            write_matrix(train_targets, "train_targets.csv")
+            write_matrix(train_features, "train_features.csv")
 
-            print("Train Targets")
-            print(train_targets)
-
-            print("Test Features")
-            print(test_features)
-
-            print("Test Targets")
-            print(test_targets)
-
-            print("Training Classifier")
-            mlp = MLPClassifier(hidden_layer_sizes=(13, 13, 13), max_iter=500)
-            mlp.fit(train_features, train_targets)
-
-            print("Testing Classifier")
-            predictions = mlp.predict(test_features)
-            print(classification_report(test_targets, predictions))
-
-
+            write_matrix(test_targets, "test_targets.csv")
+            write_matrix(test_features, "test_features.csv")
         else:
-            smplNum = int(input("Number to sample from both subsets for training?"))
-            X = self.select_two(unmodified, modified, smplNum, smplNum)
-            rnd.shuffle(X)
+            train_features = genfromtxt('train_features.csv',dtype=float, delimiter=',')
+            train_targets = genfromtxt('train_targets.csv',dtype=float, delimiter=',')
 
-        print_matrix(X)
+            test_targets = genfromtxt('test_targets.csv',dtype=float, delimiter=',')
+            test_features = genfromtxt('test_features.csv',dtype=float, delimiter=',')
 
+        print("Training Classifier")
+
+        train_features = train_features[:, 1:]
+        test_features = test_features[:, 1:]
+
+        train_one_targets = np.array(self.make_binary(train_targets))
+        test_one_targets = self.make_binary(test_targets)
+
+        mlp = MLPClassifier(hidden_layer_sizes=(13, 13, 13), max_iter=500)
+        print(train_features.shape[0])
+        print(len(train_one_targets))
+
+        print(train_features)
+        mlp.fit(train_features, train_one_targets)
+        predictions = mlp.predict(test_features)
+
+        print("Testing Classifier")
+        print(classification_report(test_one_targets, predictions))
+
+
+
+        # smplNum = int(input("Number to sample from both subsets for training?"))
+        # X = self.select_two(unmodified, modified, smplNum, smplNum)
+        # rnd.shuffle(X)
 
 x = Main()
 x.execute()
