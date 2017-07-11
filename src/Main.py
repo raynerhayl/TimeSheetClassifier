@@ -99,6 +99,11 @@ class Main:
     def execute(self):
         fileName = input("Enter file name: ")
         data = genfromtxt(fileName,dtype=str, delimiter=',')
+        feature_data = genfromtxt('company_features.csv', dtype=str, delimiter=',')
+
+        print("data: {0} feature_data: {1}".format(data.shape, feature_data.shape))
+        concant = np.append(data, feature_data, axis=1)
+        print(concant)
         #remember, [row, col]
         modified = data[0:910, :]
         unmodified = data[910:, :]
@@ -121,11 +126,11 @@ class Main:
 
             train_set_array = self.select_one(data_list, bnd)
             train_set = np.matrix(np.array(train_set_array))
-            train_features = train_set[:, 0:3]
+            train_features = train_set[:, 0:]
             train_targets = train_set[:, 3:]
 
             test_set = np.matrix(np.array(Helper.list_difference(data_list, train_set_array)))
-            test_features = test_set[:, 0:3]
+            test_features = test_set[:, 0:]
             test_targets = test_set[:, 3:6]
 
             write_matrix(train_targets, "train_targets.csv")
@@ -142,7 +147,7 @@ class Main:
 
         print("Training Classifier")
 
-        train_features = train_features[:, 1:]
+        train_features = genfromtxt('test_targets.csv',dtype=float, delimiter=',')[1:, 1:]
         test_features = test_features[:, 1:]
 
         train_one_targets = np.array(self.make_binary(train_targets))
